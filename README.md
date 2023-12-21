@@ -2,6 +2,8 @@
 
 BTACCESSCODE is a MATLAB and GNU Octave compatible implementation of Bluetooth's ACCESS CODE. The ACCESS CODE is used in the physical layer for device detection and synchronization.
 
+The implementation uses only primitive functions without any dependencies on MATLAB toolboxes or GNU Octave packages. Because of this it will likely run on most any version.  It has been tested with MATLAB versions R2019b, R2020b, and R2022b as well as GNU Octave versions 3.8.2, 6.4.2, and 8.3.0.
+
 ![Sync word construction](./images/syncword.png "Construction of the sync word.")
 
 # Files
