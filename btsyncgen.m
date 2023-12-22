@@ -9,9 +9,9 @@ function [syncword_bin,syncword_str,syncword_hex] = btsyncgen(LAP)
 %                           Example: '100111101000101100110011'
 %                       1-by-6 char array of hex digits
 %                           Examples: '9e8b33', '000b33'
-%                       integer in range [0,2^24]
+%                       integer in range [0,2^24)
 %                           Examples:  0x9e8b33, 10390323
-%   syncword_bin........Sync word, 1-by-64 integer array of binary digits
+%   syncword_bin........Sync word, 1-by-64 numeric array of binary digits
 %   syncword_str........Sync word, 1-by-64 char array of binary digits
 %   syncword_hex........Sync word, 1-by-16 char array of hex digits
 %
@@ -27,17 +27,20 @@ function [syncword_bin,syncword_str,syncword_hex] = btsyncgen(LAP)
 %
 
     % Validate input format
-    LAPIN = LAP;
-    if isnumeric(LAP)
+    if isnumeric(LAP) && numel(LAP) == 1 && LAP >= 0 && LAP < 2^24
         LAP = de2bi(double(LAP),24,'left-msb');
         LAP = bnvxbns(LAP);
-    elseif ischar(LAP) && numel(LAP) == 6
+    elseif ischar(LAP) && numel(LAP) == 6 && ...
+           all(ismember(lower(LAP),'0123456789abcdef'))
         LAP = h2b(LAP);
+    elseif ischar(LAP) && numel(LAP) == 24 && all(ismember(LAP,'01'))
+    else
+        error('Invalid LAP format. See help btsyncgen.');
     end
 
     % Procedure from Core Spec 5.4 Part B Section 6.3.3.1 pg 473
 
-    % fetch data for next test case
+    % At this point LAP is a length 24 char array of binary digits
     lap = bnvxbns(LAP);
     lap = fliplr(lap);
 
@@ -55,8 +58,6 @@ function [syncword_bin,syncword_str,syncword_hex] = btsyncgen(LAP)
     [seq,~] = lfsr_ssrg(63,[6 5 3 2 0],1);
     % Left-most bit is p0 and right-most bit p63
     p = [0 seq(end:-1:1)]; % prepend 0 for 64 bits total
-    ps = bnvxbns(p);        %debug
-    phexstr = bns2hex(ps);  %debug
 
     % Scramble LAP and Barker code with pn bits 34..63
     x_tilde = bitxor(a(1:30), p(35:64));
@@ -64,12 +65,9 @@ function [syncword_bin,syncword_str,syncword_hex] = btsyncgen(LAP)
     % Expurgated code (octal, left-msb)
     % g(D) = 260534236651
     gdbns = dec2base(base2dec('260534236651',8),2);
-    gdbnv = bnvxbns(gdbns);  %debug
-    gdocs = bns2oct(gdbns);  %debug
 
     % Parity bits
     [r] = lfsr_msrg_crc(fliplr(x_tilde), gdbns);
-    rs = bnvxbns(double(r));  %debug
 
     % Codeword
     cw = [r x_tilde];
@@ -111,22 +109,6 @@ function hexstr = bns2hex(binstr)
     dec = base2dec(bsr,2);
     hexstr = dec2base(dec,16);
     hexstr = lower(hexstr(:).');
-
-end % function
-
-function octstr = bns2oct(binstr)
-% Usage: octstr = bns2oct(binstr)
-%
-%  Convert binary string to oct string.
-%
-
-    % prepend zeros to nearest multiple of 3
-    bs = [repmat('0',1,rem(3-rem(numel(binstr),3),3)) binstr];
-
-    bsr = reshape(bs(:),3,numel(bs)/3).';
-    dec = base2dec(bsr,2);
-    octstr = dec2base(dec,8);
-    octstr = lower(octstr(:).');
 
 end % function
 

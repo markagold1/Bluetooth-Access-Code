@@ -15,8 +15,8 @@ function [accesscode_bin,accesscode_str,accesscode_hex] = btaccesscode(LAP)
 %   accesscode_hex......Sync word, 1-by-18 char array of hex digits
 %
 %   Example:
-%   >> [acbin,acstr,achex] = btsyncgen(0x9e8b33);disp(achex);
-%   475c58cc73345e72
+%   >> [acbin,acstr,achex] = btaccesscode(0x9e8b33);disp(achex);
+%   5475c58cc73345e72a
 %
 %   LSB  4                     64                     4   MSB
 %   +-------------------------------------------------------+
